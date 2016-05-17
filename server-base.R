@@ -48,6 +48,15 @@ regions <- spTransform(regions, CRS("+init=epsg:4326 +proj=longlat"))
 # # # # # # # #
 shinyServer(function(input, output, session){
 
+  region <- reactiveValues(current = startingCity)
+  # For all plotting data
+  toPlot <- NULL
+  # For any other persistent values
+  helper <- NULL
+
+  helper$eLatLng <- ""
+  helper$dataDir <- file.path(dataDirRoot, startingCity)
+
 
   # To set initialize toPlot
   loadData <- function(dataDir){
@@ -72,20 +81,7 @@ shinyServer(function(input, output, session){
     toPlot
   }
 
-  observe <- ({
-
-    region <- reactiveValues(current = startingCity)
-    # For all plotting data
-    toPlot <- NULL
-    # For any other persistent values
-    helper <- NULL
-
-    helper$eLatLng <- ""
-    helper$dataDir <- file.path(dataDirRoot, startingCity)
-    #
-    #     cat("Do I come here? \n")
-    toPlot <- loadData(helper$dataDir)
-  })
+  toPlot <- loadData(helper$dataDir)
 
   # Select and sort lines within a bounding box - given by flowsBB()
   sortLines <- function(lines, sortBy, nos){
