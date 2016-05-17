@@ -77,7 +77,6 @@ shinyServer(function(input, output, session){
     toPlot$rFast@data <- cbind(toPlot$rFast@data[!(names(toPlot$rFast) %in% names(toPlot$l))], toPlot$l@data)
     toPlot$rQuiet <- readRDS(file.path(dataDir, "rq.Rds"))
     toPlot$rQuiet@data <- cbind(toPlot$rQuiet@data[!(names(toPlot$rQuiet) %in% names(toPlot$l))], toPlot$l@data)
-    # cat(summary(toPlot$l@data), "\n")
     toPlot
   }
 
@@ -196,8 +195,6 @@ shinyServer(function(input, output, session){
     region$current
     input$transparent_zones
     input$triptype
-
-    # cat("In plotLines: ", ncol(toPlot$l@data), "\n")
 
     leafletProxy("map")  %>% clearGroup(., "straight_line") %>%
       clearGroup(., "quieter_route") %>% clearGroup(., "faster_route") %>% clearGroup(., "route_network") %>%
@@ -490,28 +487,16 @@ shinyServer(function(input, output, session){
       shinyjs::show("zone_legend")
   })
 
-
-
   observe({
     input$triptype
-
     if (region$current == 'greater-manchester'){
-
-      if (input$triptype == 'All'){
-        # cat("All trips gm\n")
+      if (input$triptype == 'All')
         helper$dataDir <<- file.path(dataDirRoot, paste0("greater-manchester-NC"))
-
-      }else{
-        # cat("Commting trips gm\n")
+      else
         helper$dataDir <<- file.path(dataDirRoot, startingCity)
 
-      }
-      # cat(helper$dataDir, "\n")
       toPlot <<- loadData(helper$dataDir)
-
-      # cat(ncol(toPlot$l@data), "\n")
     }
-
   })
 
 })
