@@ -240,14 +240,14 @@ shinyServer(function(input, output, session){
 
       {
         switch(input$line_type,
-             'straight' = hideGroup(., "straight_line") %>% showGroup(., "straight_line"),
-             'route'= {
-               hideGroup(., "quieter_route") %>% showGroup(., "quieter_route")
-               hideGroup(., "faster_route") %>% showGroup(., "faster_route")
-             },
-             'd_route' = hideGroup(., "faster_route") %>% showGroup(., "faster_route"),
-             'rnet' = hideGroup(., "route_network") %>% showGroup(., "route_network")
-          )
+               'straight' = hideGroup(., "straight_line") %>% showGroup(., "straight_line"),
+               'route'= {
+                 hideGroup(., "quieter_route") %>% showGroup(., "quieter_route")
+                 hideGroup(., "faster_route") %>% showGroup(., "faster_route")
+               },
+               'd_route' = hideGroup(., "faster_route") %>% showGroup(., "faster_route"),
+               'rnet' = hideGroup(., "route_network") %>% showGroup(., "route_network")
+        )
       }
   })
 
