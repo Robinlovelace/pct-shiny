@@ -168,15 +168,15 @@ shinyServer(function(input, output, session){
     if(file.exists(file.path(helper$dataDir, 'isolated'))) return()
     newRegion <- findRegion()
 
-    if (!is.null(newRegion) && newRegion == 'greater-manchester'){
+    # Check if the newRegion is not null, and contains 'all-trips' subfolder
+    if (!is.null(newRegion) && file.exists(file.path(dataDirRoot, newRegion, 'all-trips'))){
       if (input$triptype == 'All'){
-        dataDir <- file.path(dataDirRoot, paste0("greater-manchester-NC"))
+        dataDir <- file.path(dataDirRoot, newRegion, 'all-trips')
       }else{
         dataDir <- file.path(dataDirRoot, newRegion)
       }
-    }else{
+    }else
       dataDir <- file.path(dataDirRoot, newRegion)
-    }
 
     if(!is.null(newRegion) && helper$dataDir != dataDir && file.exists(dataDir)){
       region$current <- newRegion
@@ -488,13 +488,15 @@ shinyServer(function(input, output, session){
   })
 
   observe({
+    # Create a reactive expression on the type of trips dropdown menu
     input$triptype
-    if (region$current == 'greater-manchester'){
+    # Check if the data folder of a specific region contains a subfolder called 'all-trip'
+    # If it does, only then load 'all-trip' data or load defaul commute data
+    if (dir.exists(file.path(dataDirRoot, '/', 'all-trips'))){
       if (input$triptype == 'All')
-        helper$dataDir <<- file.path(dataDirRoot, paste0("greater-manchester-NC"))
+        helper$dataDir <<- file.path(dataDirRoot, startingCity, 'all-trips')
       else
         helper$dataDir <<- file.path(dataDirRoot, startingCity)
-
       toPlot <<- loadData(helper$dataDir)
     }
   })
