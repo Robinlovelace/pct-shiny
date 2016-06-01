@@ -65,6 +65,9 @@ shinyServer(function(input, output, session){
     toPlot$zones <-  readRDS(file.path(dataDir, "z.Rds"))
     toPlot$cents <-   readRDS(file.path(dataDir, "c.Rds"))
 
+    cat(dataDir, "\n")
+    cat("NROWS: ", nrow(toPlot$zones@data), "\n")
+
     # toPlot$l@data$dest = toPlot$l@data$geo_code_d
     # toPlot$l@data$origin = toPlot$l@data$geo_code_o
 
@@ -81,6 +84,23 @@ shinyServer(function(input, output, session){
   }
 
   toPlot <- loadData(helper$dataDir)
+
+  observe({
+    # Create a reactive expression on the type of trips dropdown menu
+    input$triptype
+    # Check if the data folder of a specific region contains a subfolder called 'all-trip'
+    # If it does, only then load 'all-trip' data or load defaul commute data
+    if (dir.exists(file.path(dataDirRoot, '/', 'all-trips'))){
+      if (input$triptype == 'All')
+        helper$dataDir <<- file.path(dataDirRoot, startingCity, 'all-trips')
+      else
+        helper$dataDir <<- file.path(dataDirRoot, startingCity)
+      toPlot <<- loadData(helper$dataDir)
+      redraw_zones()
+    }
+
+    cat("in creating new data\n")
+  })
 
   # Select and sort lines within a bounding box - given by flowsBB()
   sortLines <- function(lines, sortBy, nos){
@@ -226,9 +246,49 @@ shinyServer(function(input, output, session){
 
   })
 
+  redraw_zones <- function(){
+
+    cat("redrawing\n")
+
+    showZonePopup <- (input$line_type == 'none')
+    popup <- if(showZonePopup) zonePopup(toPlot$zones, input$scenario, zoneAttr())
+    leafletProxy("map")  %>%  clearGroup(., "zones") %>% clearGroup(., "centres") %>% clearGroup(., "regionName") %>%
+      addPolygons(.,  data = toPlot$zones
+                  , weight = 2
+                  , fillOpacity = transpRate()
+                  , opacity = 0.2
+                  , fillColor = getColourRamp(zcols, toPlot$zones[[zoneData()]])
+                  , color = "black"
+                  , group = "zones"
+                  , popup = popup
+                  , options = pathOptions(clickable = showZonePopup)
+                  , layerId = paste0(toPlot$zones[['geo_code']], '-', "zones")) %>%
+      addCircleMarkers(., data = toPlot$cents, radius = toPlot$cents$All / mean(toPlot$cents$All) * 2 + 1,
+                       color = getLineColour("centres"), group = "centres", opacity = 0.5,
+                       popup = centroidPopup(toPlot$cents, input$scenario, zoneAttr())) %>%
+      addCircleMarkers(., radius=0, lat=0, lng=0, group = "regionName", fillOpacity= 0, layerId = region$current) %>%
+      # Hide and Show line layers, so that they are displayed as the top layer in the map.
+      # Leaflet's function bringToBack() or bringToFront() (see http://leafletjs.com/reference.html#path)
+      # don't seem to exist for R
+
+      {
+        switch(input$line_type,
+               'straight' = hideGroup(., "straight_line") %>% showGroup(., "straight_line"),
+               'route'= {
+                 hideGroup(., "quieter_route") %>% showGroup(., "quieter_route")
+                 hideGroup(., "faster_route") %>% showGroup(., "faster_route")
+               },
+               'd_route' = hideGroup(., "faster_route") %>% showGroup(., "faster_route"),
+               'rnet' = hideGroup(., "route_network") %>% showGroup(., "route_network")
+        )
+      }
+  }
+
   # This function updates the zones and the lines
   observe({
     region$current
+    #input$triptype
+    cat("in drawing zones\n")
     showZonePopup <- (input$line_type == 'none')
     popup <- if(showZonePopup) zonePopup(toPlot$zones, input$scenario, zoneAttr())
     leafletProxy("map")  %>%  clearGroup(., "zones") %>% clearGroup(., "centres") %>% clearGroup(., "regionName") %>%
@@ -485,20 +545,6 @@ shinyServer(function(input, output, session){
     }
     else
       shinyjs::show("zone_legend")
-  })
-
-  observe({
-    # Create a reactive expression on the type of trips dropdown menu
-    input$triptype
-    # Check if the data folder of a specific region contains a subfolder called 'all-trip'
-    # If it does, only then load 'all-trip' data or load defaul commute data
-    if (dir.exists(file.path(dataDirRoot, '/', 'all-trips'))){
-      if (input$triptype == 'All')
-        helper$dataDir <<- file.path(dataDirRoot, startingCity, 'all-trips')
-      else
-        helper$dataDir <<- file.path(dataDirRoot, startingCity)
-      toPlot <<- loadData(helper$dataDir)
-    }
   })
 
 })
