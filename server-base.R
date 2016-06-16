@@ -48,7 +48,11 @@ regions <- spTransform(regions, CRS("+init=epsg:4326 +proj=longlat"))
 # # # # # # # #
 shinyServer(function(input, output, session){
 
-  region <- reactiveValues(current = startingCity)
+  # region <- reactiveValues(current = startingCity)
+
+  region <- reactiveValues(current = startingCity, dataDir = file.path(dataDirRoot, startingCity), replot = F,
+                           repopulateRegions = F) #"don't change"
+
   # For all plotting data
   toPlot <- NULL
   # For any other persistent values
@@ -59,47 +63,56 @@ shinyServer(function(input, output, session){
 
 
   # To set initialize toPlot
-  loadData <- function(dataDir){
-    toPlot
-    toPlot$l <- readRDS(file.path(dataDir, "l.Rds"))
-    toPlot$zones <-  readRDS(file.path(dataDir, "z.Rds"))
-    toPlot$cents <-   readRDS(file.path(dataDir, "c.Rds"))
+  observe({
+    region$current
+    helper$dataDir
+    region$repopulateRegions
 
-    cat(dataDir, "\n")
+    cat("to plot: ", region$repopulateRegions, "\n")
+
+    toPlot$l <<- readRDS(file.path(helper$dataDir, "l.Rds"))
+    toPlot$zones <<-  readRDS(file.path(helper$dataDir, "z.Rds"))
+    toPlot$cents <<-   readRDS(file.path(helper$dataDir, "c.Rds"))
+
+    cat(helper$dataDir, "\n")
     cat("NROWS: ", nrow(toPlot$zones@data), "\n")
 
-    # toPlot$l@data$dest = toPlot$l@data$geo_code_d
-    # toPlot$l@data$origin = toPlot$l@data$geo_code_o
+    toPlot$l@data <<- plyr::arrange(toPlot$l@data, id)
 
-    toPlot$l@data <- plyr::arrange(toPlot$l@data, id)
+    toPlot$rnet <<- readRDS(file.path(helper$dataDir, "rnet.Rds"))
+    toPlot$rnet$id <<- 1:nrow(toPlot$rnet)
 
-    toPlot$rnet <- readRDS(file.path(dataDir, "rnet.Rds"))
-    toPlot$rnet$id <- 1:nrow(toPlot$rnet)
-
-    toPlot$rFast <- readRDS(file.path(dataDir, "rf.Rds" ))
-    toPlot$rFast@data <- cbind(toPlot$rFast@data[!(names(toPlot$rFast) %in% names(toPlot$l))], toPlot$l@data)
-    toPlot$rQuiet <- readRDS(file.path(dataDir, "rq.Rds"))
-    toPlot$rQuiet@data <- cbind(toPlot$rQuiet@data[!(names(toPlot$rQuiet) %in% names(toPlot$l))], toPlot$l@data)
+    toPlot$rFast <<- readRDS(file.path(helper$dataDir, "rf.Rds" ))
+    toPlot$rFast@data <<- cbind(toPlot$rFast@data[!(names(toPlot$rFast) %in% names(toPlot$l))], toPlot$l@data)
+    toPlot$rQuiet <<- readRDS(file.path(helper$dataDir, "rq.Rds"))
+    toPlot$rQuiet@data <<- cbind(toPlot$rQuiet@data[!(names(toPlot$rQuiet) %in% names(toPlot$l))], toPlot$l@data)
+    region$repopulateRegions <<- F
     toPlot
-  }
-
-  toPlot <- loadData(helper$dataDir)
+  })
 
   observe({
     # Create a reactive expression on the type of trips dropdown menu
     input$triptype
+    cat(input$triptype, "\n")
+
     # Check if the data folder of a specific region contains a subfolder called 'all-trip'
     # If it does, only then load 'all-trip' data or load defaul commute data
-    if (dir.exists(file.path(dataDirRoot, '/', 'all-trips'))){
-      if (input$triptype == 'All')
+    if (dir.exists(file.path(dataDirRoot, startingCity, 'all-trips'))){
+      if (input$triptype == 'All'){
         helper$dataDir <<- file.path(dataDirRoot, startingCity, 'all-trips')
-      else
+      }
+      else{
         helper$dataDir <<- file.path(dataDirRoot, startingCity)
-      toPlot <<- loadData(helper$dataDir)
-      redraw_zones()
+      }
+
+      #toPlot <<- loadData(helper$dataDir)
+      # redraw_zones()
+      region$repopulateRegions <<- T
+      cat("in creating new data\n")
+      cat(helper$dataDir, "\n")
     }
 
-    cat("in creating new data\n")
+
   })
 
   # Select and sort lines within a bounding box - given by flowsBB()
@@ -201,7 +214,7 @@ shinyServer(function(input, output, session){
     if(!is.null(newRegion) && helper$dataDir != dataDir && file.exists(dataDir)){
       region$current <- newRegion
       helper$dataDir <<- dataDir
-      toPlot <<- loadData(dataDir)
+      #toPlot <<- loadData(dataDir)
       if(input$freeze) # If we change the map data then lines should not be frozen to the old map data
         updateCheckboxInput(session, "freeze", value = F)
     }
