@@ -105,8 +105,6 @@ shinyServer(function(input, output, session){
       # redraw_zones()
       region$repopulateRegions <<- T
     }
-
-
   })
 
   # Select and sort lines within a bounding box - given by flowsBB()
