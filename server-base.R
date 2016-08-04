@@ -68,14 +68,9 @@ shinyServer(function(input, output, session){
     helper$dataDir
     region$repopulateRegions
 
-    cat("to plot: ", region$repopulateRegions, "\n")
-
     toPlot$l <<- readRDS(file.path(helper$dataDir, "l.Rds"))
     toPlot$zones <<-  readRDS(file.path(helper$dataDir, "z.Rds"))
     toPlot$cents <<-   readRDS(file.path(helper$dataDir, "c.Rds"))
-
-    cat(helper$dataDir, "\n")
-    cat("NROWS: ", nrow(toPlot$zones@data), "\n")
 
     toPlot$l@data <<- plyr::arrange(toPlot$l@data, id)
 
@@ -93,7 +88,6 @@ shinyServer(function(input, output, session){
   observe({
     # Create a reactive expression on the type of trips dropdown menu
     input$triptype
-    cat(input$triptype, "\n")
 
     # Check if the data folder of a specific region contains a subfolder called 'all-trip'
     # If it does, only then load 'all-trip' data or load defaul commute data
@@ -108,8 +102,6 @@ shinyServer(function(input, output, session){
       #toPlot <<- loadData(helper$dataDir)
       # redraw_zones()
       region$repopulateRegions <<- T
-      cat("in creating new data\n")
-      cat(helper$dataDir, "\n")
     }
 
 
@@ -261,8 +253,6 @@ shinyServer(function(input, output, session){
 
   redraw_zones <- function(){
 
-    cat("redrawing\n")
-
     showZonePopup <- (input$line_type == 'none')
     popup <- if(showZonePopup) zonePopup(toPlot$zones, input$scenario, zoneAttr())
     leafletProxy("map")  %>%  clearGroup(., "zones") %>% clearGroup(., "centres") %>% clearGroup(., "regionName") %>%
@@ -301,7 +291,6 @@ shinyServer(function(input, output, session){
   observe({
     region$current
     #input$triptype
-    cat("in drawing zones\n")
     showZonePopup <- (input$line_type == 'none')
     popup <- if(showZonePopup) zonePopup(toPlot$zones, input$scenario, zoneAttr())
     leafletProxy("map")  %>%  clearGroup(., "zones") %>% clearGroup(., "centres") %>% clearGroup(., "regionName") %>%
