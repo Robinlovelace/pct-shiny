@@ -21,7 +21,6 @@
 
 # Colours
 zcols <- c("darkslategrey", "yellow")
-
 # expect pct-data as a sibling of pct-shiny
 dataDirRoot <- file.path(shinyRoot, '..', 'pct-data')
 # packages required
@@ -105,8 +104,6 @@ shinyServer(function(input, output, session){
       # redraw_zones()
       region$repopulateRegions <<- T
     }
-
-
   })
 
   # Select and sort lines within a bounding box - given by flowsBB()
