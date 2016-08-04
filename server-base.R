@@ -21,12 +21,16 @@
 
 # Colours
 zcols <- c("darkslategrey", "yellow")
-# expect pct-data as a sibling of pct-shiny
-dataDirRoot <- file.path(shinyRoot, '..', 'pct-data')
+
 # packages required
 cranPkgs <- c("shiny", "RColorBrewer", "httr", "rgdal", "rgeos", "leaflet", "DT", "shinyjs")
 
 onProduction <- grepl('^/var/shiny/pct-shiny', getwd())
+
+# expect pct-data as a sibling of pct-shiny
+dataDirRoot <- file.path(shinyRoot, '..', 'pct-data')
+if(onProduction)
+  dataDirRoot <- file.path(shinyRoot, '..', 'pct-data-all-layers')
 
 # Run the following lines to check out the current version of the data (see sha)
 if(!onProduction){
