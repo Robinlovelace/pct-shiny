@@ -21,4 +21,5 @@ if (file.exists(data_sha_file)){
   system2("git", c("--git-dir", file.path(dataDirRoot, ".git"), "--work-tree",
                    dataDirRoot, "checkout", data_sha), wait=T)
 }
+
 system2("git", c("rev-parse", "--short", "HEAD", ">", file.path(shinyRoot, "repo_sha")), wait=T)
