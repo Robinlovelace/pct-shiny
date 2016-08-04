@@ -68,6 +68,8 @@ shinyServer(function(input, output, session){
     helper$dataDir
     region$repopulateRegions
 
+    cat("Directory: ", helper$dataDir, "\n")
+
     toPlot$l <<- readRDS(file.path(helper$dataDir, "l.Rds"))
     toPlot$zones <<-  readRDS(file.path(helper$dataDir, "z.Rds"))
     toPlot$cents <<-   readRDS(file.path(helper$dataDir, "c.Rds"))
@@ -290,7 +292,9 @@ shinyServer(function(input, output, session){
   # This function updates the zones and the lines
   observe({
     region$current
+    helper$dataDir
     #input$triptype
+    cat("Zone Drawing: directory: ", helper$dataDir, "\n")
     showZonePopup <- (input$line_type == 'none')
     popup <- if(showZonePopup) zonePopup(toPlot$zones, input$scenario, zoneAttr())
     leafletProxy("map")  %>%  clearGroup(., "zones") %>% clearGroup(., "centres") %>% clearGroup(., "regionName") %>%
